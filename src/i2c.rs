@@ -48,12 +48,12 @@ impl I2CConn {
     }
 
     fn call(&mut self, msg: &Message) -> Result<Vec<u8>, Error> {
-        try!(self.port.write_all(&msg.send()));
+        self.port.write_all(&msg.send())?;
         let good_reply = msg.expect().expect("Couldn't encode message");
         let mut reply = iter::repeat::<u8>(0)
             .take(good_reply.len()).collect::<Vec<u8>>();
 
-        try!(self.port.read_exact(&mut reply));
+        self.port.read_exact(&mut reply)?;
         if reply.eq(&good_reply) {
             Ok(reply)
         } else {
@@ -71,6 +71,7 @@ impl I2CConn {
                                       settings.cs))?;
         Ok(())
     }
+}
 
 impl Drop for I2CConn {
     fn drop(&mut self) {

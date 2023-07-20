@@ -27,8 +27,8 @@ pub struct Device {
 
 impl Device {
     pub fn open(&self) -> SerialResult<BusPirate> {
-        let mut port = try!(serial::open(&self.device));
-        try!(port.configure(&BUSPIRATE_SETTINGS));
+        let mut port = serial::open(&self.device)?;
+        port.configure(&BUSPIRATE_SETTINGS)?;
         Ok(BusPirate::new(port))
     }
 }

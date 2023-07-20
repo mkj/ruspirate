@@ -21,12 +21,12 @@ impl BBIOConn {
     pub fn enter_i2c_mode(self) -> Result<I2CConn> {
         let mut port = self.port;
         let msg = Message::I2C;
-        try!(port.write_all(&msg.send()));
+        port.write_all(&msg.send())?;
         let good_reply = msg.expect();
         use std::iter;
         let mut buf = iter::repeat::<u8>(0)
             .take(good_reply.len()).collect::<Vec<u8>>();
-        try!(port.read_exact(&mut buf));
+        port.read_exact(&mut buf)?;
         if buf == good_reply {
             return Ok(I2CConn::new(port))
         }

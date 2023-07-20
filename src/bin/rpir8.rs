@@ -73,7 +73,7 @@ fn main() {
                 Some(pirate) => {
                     println!("Testing {:?}", pirate);
                     match pirate.open() {
-                        Ok(mut p) => {
+                        Ok(p) => {
                             println!("Yay! Opened {:?} as {:#?}",
                                      pirate.device.to_str(), p);
                             match p.enter_bio_mode() {

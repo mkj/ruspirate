@@ -20,8 +20,8 @@ impl BusPirate {
 
     pub fn read_vsn(&mut self) -> Result<String> {
         let original_timeout = self.port.timeout();
-        try!(self.port.set_timeout(Duration::from_millis(100)));
-        try!(write!(self.port, "\n\n\n\n\n\n\n\n\n\n#\n"));
+        self.port.set_timeout(Duration::from_millis(100))?;
+        write!(self.port, "\n\n\n\n\n\n\n\n\n\n#\n")?;
         let mut boot_str: String = String::new();
         let start = Instant::now();
         loop {
@@ -38,12 +38,12 @@ impl BusPirate {
                 Err(ref e) if e.kind() == ErrorKind::TimedOut => break,
                 Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
                 Err(e) => {
-                    try!(self.port.set_timeout(original_timeout));
+                    self.port.set_timeout(original_timeout)?;
                     return Err(e.into())
                 }
             }
         }
-        try!(self.port.set_timeout(original_timeout));
+        self.port.set_timeout(original_timeout)?;
         // Clean up the output (remove response to state reset string,
         // trailing prompt)
         Ok(boot_str.split("\r\n")
@@ -57,7 +57,7 @@ impl BusPirate {
     pub fn enter_bio_mode(self) -> Result<BBIOConn> {
         let mut port = self.port;
         // Try to escape any prompt we're at.
-        try!(write!(port, "\n\n\n\n\n\n\n\n\n\n#\n"));
+        write!(port, "\n\n\n\n\n\n\n\n\n\n#\n")?;
 
         // Flush read
         let mut buffer: Vec<u8> = Vec::new();
@@ -68,30 +68,30 @@ impl BusPirate {
         }
 
         let original_timeout = port.timeout();
-        try!(port.set_timeout(Duration::from_millis(20)));
+        port.set_timeout(Duration::from_millis(20))?;
 
         for _try in 1..40 {
-            try!(port.write_all(&[0x00; 1]));
+            port.write_all(&[0x00; 1])?;
             let mut vsn_vec: [u8; 5] = [0; 5];
             match port.read_exact(&mut vsn_vec) {
                 Err(ref e) if e.kind() == ErrorKind::TimedOut => continue,
                 Err(e) => {
-                    try!(port.set_timeout(original_timeout));
+                    port.set_timeout(original_timeout)?;
                     return Err(e.into())
                 }
                 Ok(()) => {
                     if vsn_vec == BBIO_RESP_V1 {
-                        try!(port.set_timeout(original_timeout));
+                        port.set_timeout(original_timeout)?;
                         return Ok(BBIOConn::new(port, BinModeVSN::One))
                     }
-                    try!(port.set_timeout(original_timeout));
+                    port.set_timeout(original_timeout)?;
                     return Err(Error::new(serial::ErrorKind::InvalidInput,
                                           format!("Got {:?} while entering binmode",
                                                   vsn_vec)));
                 }
             }
         }
-        try!(port.set_timeout(original_timeout));
+        port.set_timeout(original_timeout)?;
         Err(Error::new(serial::ErrorKind::InvalidInput,
                        "couldn't enter binary IO mode"))
     }
